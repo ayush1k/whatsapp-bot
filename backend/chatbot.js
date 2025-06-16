@@ -10,19 +10,36 @@ const FLOW_STEPS = [
   { key: 'siteVisit', question: "Thanks! Would you like to schedule a site visit this week? We have ready-to-move options matching your criteria." },
 ];
 
-const leadProgress = {}; // Per-lead state tracking
+// In-memory lead tracking
+const leadProgress = {};
+
+// 🔍 Classify lead based on heuristics
+const classifyLead = (meta) => {
+  const values = Object.values(meta).join(' ').toLowerCase();
+
+  // ❌ Gibberish or fake checks
+  if (/^[0-9\s]+$/.test(values) || values.includes('asdf') || values.includes('qwerty')) return 'Invalid';
+
+  // 🔥 Hot lead = all fields filled + urgency
+  if (meta.location && meta.propertyType && meta.budget && meta.timeline && meta.timeline.toLowerCase().includes('month')) return 'Hot';
+
+  // ❄️ Cold lead = vague responses or browsing intent
+  if (values.includes('just browsing') || !meta.budget || !meta.timeline) return 'Cold';
+
+  return 'Cold';
+};
 
 const chatWithLLM = async (conversation, leadId) => {
   let leadState = leadProgress[leadId] || { step: 0, metadata: {} };
 
-  // Save user's previous response (if any)
+  // Save user's response from previous step
   const lastStep = FLOW_STEPS[leadState.step - 1];
-  const userMessage = conversation[conversation.length - 1].content;
-  if (lastStep) {
+  const userMessage = conversation[conversation.length - 1]?.content;
+  if (lastStep && userMessage) {
     leadState.metadata[lastStep.key] = userMessage;
   }
 
-  // Move to next step
+  // Ask next question
   const nextStep = FLOW_STEPS[leadState.step];
   if (nextStep) {
     leadState.step++;
@@ -30,11 +47,13 @@ const chatWithLLM = async (conversation, leadId) => {
     return nextStep.question;
   }
 
-  // If all steps are done, summarize + call LLM for natural closing
+  // 🎯 All steps done → classify & summarize
+  const leadType = classifyLead(leadState.metadata);
+
   const summaryPrompt = [
     {
       role: "system",
-      content: "You are a helpful real estate assistant summarizing a buyer's needs.",
+      content: "You are a polite real estate assistant. Summarize the client's inputs and close by showing their lead type (Hot/Cold/Invalid).",
     },
     {
       role: "user",
@@ -45,7 +64,7 @@ const chatWithLLM = async (conversation, leadId) => {
 - Timeline: ${leadState.metadata.timeline}
 - Site Visit: ${leadState.metadata.siteVisit}
 
-Summarize and give a polite closing message.`,
+Based on this info, classify the lead as "${leadType}" and give a short friendly closing message.`,
     },
   ];
 
