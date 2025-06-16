@@ -13,6 +13,9 @@ This is a full-stack intelligent assistant built for GrowEasy to qualify real es
 - ⚙️ Modular backend using Express.js
 - 📱 Responsive frontend with Tailwind CSS
 
+
+![sample conversation](sample.png)
+
 ---
 
 ## 🛠️ Tech Stack
