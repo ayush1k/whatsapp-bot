@@ -1,5 +1,8 @@
 const fetch = require('node-fetch');
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
+const { stringify } = require('csv-stringify/sync');
 
 // 👇️ Predefined step-by-step questions
 const FLOW_STEPS = [
@@ -16,12 +19,39 @@ const leadProgress = {};
 // 🔍 Classify lead based on heuristics
 const classifyLead = (meta) => {
   const values = Object.values(meta).join(' ').toLowerCase();
-
   if (/^[0-9\s]+$/.test(values) || values.includes('asdf') || values.includes('qwerty')) return 'Invalid';
   if (meta.location && meta.propertyType && meta.budget && meta.timeline && meta.timeline.toLowerCase().includes('month')) return 'Hot';
   if (values.includes('just browsing') || !meta.budget || !meta.timeline) return 'Cold';
-
   return 'Cold';
+};
+
+// 💾 Save lead data to CSV with timestamp in /data folder
+const saveLeadToCSV = (metadata, leadId, leadType) => {
+  const dataDir = path.join(__dirname, 'data');
+  const csvFile = path.join(dataDir, 'leads.csv');
+
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+
+  const headers = ['Timestamp', 'Lead ID', 'Location', 'Property Type', 'Budget', 'Timeline', 'Site Visit', 'Lead Type'];
+  const timestamp = new Date().toISOString();
+
+  const row = [
+    timestamp,
+    leadId,
+    metadata.location || '',
+    metadata.propertyType || '',
+    metadata.budget || '',
+    metadata.timeline || '',
+    metadata.siteVisit || '',
+    leadType,
+  ];
+
+  const fileExists = fs.existsSync(csvFile);
+  const csv = stringify([row], { header: !fileExists, columns: headers });
+
+  fs.appendFileSync(csvFile, csv);
 };
 
 const chatWithLLM = async (conversation, leadId) => {
@@ -40,13 +70,14 @@ const chatWithLLM = async (conversation, leadId) => {
     return nextStep.question;
   }
 
-  // 🎯 All steps done → classify internally & summarize
-  const leadType = classifyLead(leadState.metadata); // 🧠 Used for internal tracking only
+  // ✅ All steps completed → classify and save
+  const leadType = classifyLead(leadState.metadata);
+  saveLeadToCSV(leadState.metadata, leadId, leadType);
 
   const summaryPrompt = [
     {
       role: "system",
-      content: "You are a polite real estate assistant. Summarize the client's inputs and give a warm closing message.",
+      content: "You are a polite real estate assistant. Summarize the user's preferences naturally and generate a warm closing message without using phrases like 'Here's a summary' or 'To recap'.",
     },
     {
       role: "user",
@@ -57,7 +88,7 @@ const chatWithLLM = async (conversation, leadId) => {
 - Timeline: ${leadState.metadata.timeline}
 - Site Visit Preference: ${leadState.metadata.siteVisit}
 
-Please generate a friendly and polite closing message thanking them and mentioning that a property expert will follow up shortly.`,
+Please write a friendly and professional closing message, and mention that a property expert will follow up soon.`,
     },
   ];
 
