@@ -17,13 +17,8 @@ const leadProgress = {};
 const classifyLead = (meta) => {
   const values = Object.values(meta).join(' ').toLowerCase();
 
-  // ❌ Gibberish or fake checks
   if (/^[0-9\s]+$/.test(values) || values.includes('asdf') || values.includes('qwerty')) return 'Invalid';
-
-  // 🔥 Hot lead = all fields filled + urgency
   if (meta.location && meta.propertyType && meta.budget && meta.timeline && meta.timeline.toLowerCase().includes('month')) return 'Hot';
-
-  // ❄️ Cold lead = vague responses or browsing intent
   if (values.includes('just browsing') || !meta.budget || !meta.timeline) return 'Cold';
 
   return 'Cold';
@@ -32,14 +27,12 @@ const classifyLead = (meta) => {
 const chatWithLLM = async (conversation, leadId) => {
   let leadState = leadProgress[leadId] || { step: 0, metadata: {} };
 
-  // Save user's response from previous step
   const lastStep = FLOW_STEPS[leadState.step - 1];
   const userMessage = conversation[conversation.length - 1]?.content;
   if (lastStep && userMessage) {
     leadState.metadata[lastStep.key] = userMessage;
   }
 
-  // Ask next question
   const nextStep = FLOW_STEPS[leadState.step];
   if (nextStep) {
     leadState.step++;
@@ -47,24 +40,24 @@ const chatWithLLM = async (conversation, leadId) => {
     return nextStep.question;
   }
 
-  // 🎯 All steps done → classify & summarize
-  const leadType = classifyLead(leadState.metadata);
+  // 🎯 All steps done → classify internally & summarize
+  const leadType = classifyLead(leadState.metadata); // 🧠 Used for internal tracking only
 
   const summaryPrompt = [
     {
       role: "system",
-      content: "You are a polite real estate assistant. Summarize the client's inputs and close by showing their lead type (Hot/Cold/Invalid).",
+      content: "You are a polite real estate assistant. Summarize the client's inputs and give a warm closing message.",
     },
     {
       role: "user",
-      content: `Here are the buyer details:
+      content: `Here are the buyer's preferences:
 - Location: ${leadState.metadata.location}
-- Property: ${leadState.metadata.propertyType}
+- Property Type: ${leadState.metadata.propertyType}
 - Budget: ${leadState.metadata.budget}
 - Timeline: ${leadState.metadata.timeline}
-- Site Visit: ${leadState.metadata.siteVisit}
+- Site Visit Preference: ${leadState.metadata.siteVisit}
 
-Based on this info, classify the lead as "${leadType}" and give a short friendly closing message.`,
+Please generate a friendly and polite closing message thanking them and mentioning that a property expert will follow up shortly.`,
     },
   ];
 
