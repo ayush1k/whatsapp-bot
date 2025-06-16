@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// In-memory conversation tracking (could use a DB later)
+// In-memory conversation tracking
 const sessions = {};
 
 // Simulated chatbot logic
@@ -18,25 +18,35 @@ const { chatWithLLM } = require('./chatbot');
 
 // Routes
 app.post('/chat', async (req, res) => {
-  const { leadId = 'default', message } = req.body;
-
-  if (!sessions[leadId]) {
-    sessions[leadId] = [];
-  }
-
-  sessions[leadId].push({ role: 'user', content: message });
-
   try {
+    const { leadId = 'default', message } = req.body;
+
+    if (!message || typeof message !== 'string' || message.trim() === '') {
+      return res.status(400).json({ error: 'Invalid message' });
+    }
+
+    // Create session if not exist
+    if (!sessions[leadId]) {
+      sessions[leadId] = [];
+    }
+
+    // Push user message
+    sessions[leadId].push({ role: 'user', content: message });
+
+    // Get LLM response
     const reply = await chatWithLLM(sessions[leadId]);
+
+    // Save assistant message
     sessions[leadId].push({ role: 'assistant', content: reply });
 
     res.json({ reply });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to generate response' });
+    console.error('❌ Server error:', error);
+    res.status(500).json({ error: 'Failed to generate response from LLM' });
   }
 });
 
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
