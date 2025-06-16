@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 // In-memory conversation tracking
 const sessions = {};
 
-// Simulated chatbot logic
+// Import chatbot logic
 const { chatWithLLM } = require('./chatbot');
 
 // Routes
@@ -25,21 +25,23 @@ app.post('/chat', async (req, res) => {
       return res.status(400).json({ error: 'Invalid message' });
     }
 
-    // Create session if not exist
+    // Initialize session if needed
     if (!sessions[leadId]) {
       sessions[leadId] = [];
     }
 
-    // Push user message
+    // Add user message to session
     sessions[leadId].push({ role: 'user', content: message });
 
-    // Get LLM response
-    const reply = await chatWithLLM(sessions[leadId]);
+    // 🔄 Pass leadId for step tracking
+    const reply = await chatWithLLM(sessions[leadId], leadId);
 
-    // Save assistant message
+    // Add assistant's reply to session
     sessions[leadId].push({ role: 'assistant', content: reply });
 
+    // Send reply to frontend
     res.json({ reply });
+
   } catch (error) {
     console.error('❌ Server error:', error);
     res.status(500).json({ error: 'Failed to generate response from LLM' });
