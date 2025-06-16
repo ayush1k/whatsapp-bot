@@ -14,7 +14,7 @@ This is a full-stack intelligent assistant built for GrowEasy to qualify real es
 - 📱 Responsive frontend with Tailwind CSS
 
 
-![sample conversation](sample.png)
+![Sample Chatbot Conversation](sample.png)
 
 ---
 
