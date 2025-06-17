@@ -1,0 +1,16 @@
+Bot: Hi! I’m your GrowEasy real estate assistant. Could you share which city/location you’re looking for?  
+User: Bangalore  
+
+Bot: Great! Are you looking for a flat, villa, or plot? Also, is this for investment or personal use?  
+User: 2BHK flat for personal use  
+
+Bot: Understood! What’s your budget range? (e.g., 50L–80L)  
+User: Around ₹70–80 Lakhs  
+
+Bot: Got it. When do you plan to move in or finalize your purchase?  
+User: In 2–3 months  
+
+Bot: Thanks! Would you like to schedule a site visit this week? We have ready-to-move options matching your criteria.  
+User: Yes  
+
+Bot: Thank you for sharing your preferences! We'll have a property expert reach out shortly with matching options. We look forward to helping you find your ideal home.

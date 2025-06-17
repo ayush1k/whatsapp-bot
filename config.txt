@@ -1,0 +1,29 @@
+{
+  "business_name": "GrowEasy",
+  "assistant_name": "GrowEasy Real Estate Assistant",
+  "steps": [
+    {
+      "key": "location",
+      "question": "Hi! I’m your GrowEasy real estate assistant. Could you share which city/location you’re looking for?"
+    },
+    {
+      "key": "propertyType",
+      "question": "Great! Are you looking for a flat, villa, or plot? Also, is this for investment or personal use?"
+    },
+    {
+      "key": "budget",
+      "question": "Understood! What’s your budget range? (e.g., 50L–80L)"
+    },
+    {
+      "key": "timeline",
+      "question": "Got it. When do you plan to move in or finalize your purchase?"
+    },
+    {
+      "key": "siteVisit",
+      "question": "Thanks! Would you like to schedule a site visit this week? We have ready-to-move options matching your criteria."
+    }
+  ],
+  "llm_model": "llama3-8b-8192",
+  "temperature": 0.7,
+  "closing_message_instructions": "Summarize the user's preferences naturally and generate a polite closing message without using phrases like 'Here's a summary'."
+}
