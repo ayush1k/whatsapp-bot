@@ -1,6 +1,6 @@
-# 🏡 GrowEasy Real Estate Assistant Chatbot
+# 🏡 Real Estate Assistant Chatbot
 
-This is a full-stack intelligent assistant built for GrowEasy to qualify real estate leads through a guided conversational flow. The frontend is developed using **React + Tailwind CSS**, while the backend uses **Node.js + Express** with integration to the **Groq LLM API (LLaMA 3 model)**.
+This is a full-stack intelligent assistant built to qualify real estate leads through a guided conversational flow. The frontend is developed using **React + Tailwind CSS**, while the backend uses **Node.js + Express** with integration to the **Groq LLM API (LLaMA 3 model)**.
 
 ---
 
